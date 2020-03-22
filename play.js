@@ -137,6 +137,6 @@ class Play extends Phaser.Scene {
     }
 
     returnToMenu () {
-        this.scene.start("start");
+        this.scene.start("u_ded");
     }
 }

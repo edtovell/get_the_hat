@@ -9,7 +9,10 @@ class Start extends Phaser.Scene {
             config.width*.3,
             config.height*.3,
             'get the hat',
-            {font: "30px Arial"}
+            {
+                fontSize: "30px",
+                fontFamily: "Arial",
+            }
         );
         this.time.addEvent({
             delay:3000,

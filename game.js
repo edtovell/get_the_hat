@@ -8,7 +8,7 @@ var config = {
             // debug: true
         }
     },
-    scene: [Start, Play]
+    scene: [Start, Play, UDed]
     // scene: [Play]
 };
 
