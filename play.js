@@ -119,10 +119,10 @@ class Play extends Phaser.Scene {
                 var emitter = particles.createEmitter({
                     x: this.guy.x,
                     y: this.guy.y,
-                    speed: {min: 10, max: 50},
-                    gravityY: 20,
-                    lifespan: {min: 1000, max: 2000},
-                    quantity: 200
+                    speed: {min: 10, max: 40},
+                    gravityY: 50,
+                    lifespan: {min: 500, max: 2000},
+                    quantity: 100
                 });
                 this.guy.setVisible(false);
                 emitter.explode();
