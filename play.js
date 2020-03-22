@@ -1,17 +1,17 @@
 class Play extends Phaser.Scene {
 
     constructor () {
-        super({key: "play"})
+        super({key: "play"});
+        this.guyMoveSpeed = 150;
     }
 
     preload () {
         this.load.spritesheet('guy', './assets/images/guy_spritesheet.png', {frameWidth: 32, frameHeight: 32});
         this.load.tilemapTiledJSON('map', './assets/images/maps/map1.json');
         this.load.image('tiles', './assets/images/tiles/tile_spritesheet.png');
-        // for future reference: https://www.toptal.com/developers/css/sprite-generator/
-
+        this.load.image('red_dot', './assets/particles/red_dot.png');
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.guyMoveSpeed = 150;
+        // for future reference: https://www.toptal.com/developers/css/sprite-generator/
     }
 
     create () {
@@ -69,45 +69,74 @@ class Play extends Phaser.Scene {
     }
 
     update () {
-        //guy animations
         var cursors = this.cursors;
         var guy = this.guy;
-        if(cursors.left.isDown){
-            guy.anims.play('l/r', true);
-            guy.flipX = false;
-        } else if(cursors.right.isDown){
-            guy.anims.play('l/r', true);
-            guy.flipX = true;
-        } else if(cursors.up.isDown){
-            guy.anims.play('up', true);
-        } else if(cursors.down.isDown){
-            guy.anims.play('down', true);
-        } else {
-            guy.anims.play('idle', true);
-        }
+        
+        if(guy.active){
+            //guy animations
+            if(cursors.left.isDown){
+                guy.anims.play('l/r', true);
+                guy.flipX = false;
+            } else if(cursors.right.isDown){
+                guy.anims.play('l/r', true);
+                guy.flipX = true;
+            } else if(cursors.up.isDown){
+                guy.anims.play('up', true);
+            } else if(cursors.down.isDown){
+                guy.anims.play('down', true);
+            } else {
+                guy.anims.play('idle', true);
+            }
 
-        //guy movements
-        guy.body.setVelocity(0);
+            //guy movements
+            guy.body.setVelocity(0);
+            if(cursors.left.isDown){
+                guy.body.setVelocityX(-this.guyMoveSpeed);
+            } else if(cursors.right.isDown){
+                guy.setVelocityX(this.guyMoveSpeed);
+            }
+            if(cursors.up.isDown){
+                guy.body.setVelocityY(-this.guyMoveSpeed);
+            } else if(cursors.down.isDown){
+                guy.body.setVelocityY(this.guyMoveSpeed);
+            }
 
-        if(cursors.left.isDown){
-            // guy.body.setVelocityY(0);
-            guy.body.setVelocityX(-this.guyMoveSpeed);
-        } else if(cursors.right.isDown){
-            // guy.body.setVelocityY(0);
-            guy.setVelocityX(this.guyMoveSpeed);
-        }
-
-        if(cursors.up.isDown){
-            // guy.body.setVelocityX(0);
-            guy.body.setVelocityY(-this.guyMoveSpeed);
-        } else if(cursors.down.isDown){
-            // guy.body.setVelocityX(0);
-            guy.body.setVelocityY(this.guyMoveSpeed);
-        }
-
-        if(cursors.space.isDown){
-            guy.scaleDownDestroy()
+            if(cursors.space.isDown){
+                this.playerDies();
+            }
         }
         
+    }
+
+    playerDies () {
+        this.guy.body.setVelocity(0);
+        this.guy.anims.play("idle", true);
+        this.guy.setActive(false);
+        this.time.addEvent({
+            delay:1000,
+            callback: function() {
+                var particles = this.add.particles("red_dot");
+                var emitter = particles.createEmitter({
+                    x: this.guy.x,
+                    y: this.guy.y,
+                    speed: {min: 10, max: 50},
+                    gravityY: 20,
+                    lifespan: {min: 1000, max: 2000},
+                    quantity: 200
+                });
+                this.guy.setVisible(false);
+                emitter.explode();
+            },
+            callbackScope: this,
+        });
+        this.time.addEvent({
+            delay: 5000,
+            callback: this.returnToMenu,
+            callbackScope: this,
+        })
+    }
+
+    returnToMenu () {
+        this.scene.start("start");
     }
 }
