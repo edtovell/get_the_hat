@@ -24,14 +24,20 @@ class Play extends Phaser.Scene {
         this.sound.play('music', {loop: true});
 
         //map & tiles    
+        const T = 32; //size of one tile
         var map = this.make.tilemap({key: 'map'});
-        var tiles = map.addTilesetImage('tile_spritesheet', 'tiles', 32, 32, 1, 2);
+        var tiles = map.addTilesetImage('tile_spritesheet', 'tiles', T, T, 1, 2);
         var grass = map.createStaticLayer('grass', tiles);
         var obstacles = map.createStaticLayer('obstacles', tiles);
         obstacles.setCollisionByExclusion([-1]);
 
+        function coord(n) {
+            // returns x or y pixel values for tiled coordinates
+            return T*n + (T/2)
+        }
+
         //guy goes in middle, camera follows guy,
-        this.guy = this.physics.add.sprite(config.width/2, config.height/2,'guy', 0);
+        this.guy = this.physics.add.sprite(coord(15), coord(38), 'guy', 0); 
         var guy = this.guy;
         this.cameras.main.startFollow(guy);
         this.cameras.main.setZoom(2);
@@ -73,9 +79,11 @@ class Play extends Phaser.Scene {
             frameRate: 5,
             repeat: -1
         });
+        
+        guy.anims.play('idle');
 
         // there is a wizard
-        this.wizard = this.physics.add.sprite(200, 200, "wizard", 0);
+        this.wizard = this.physics.add.sprite(coord(12), coord(36), "wizard", 0);
         this.wizard.body.immovable = true;
         this.anims.create({
             key: 'wizard',
