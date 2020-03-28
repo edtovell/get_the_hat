@@ -76,10 +76,10 @@ class Play extends Phaser.Scene {
 
         // there is a wizard
         this.wizard = this.physics.add.sprite(200, 200, "wizard", 0);
-        this.wizard.body.static = true;
+        this.wizard.body.immovable = true;
         this.anims.create({
             key: 'wizard',
-            frames: this.anims.generateFrameNumbers('wizard', {frames: [2,3]}),
+            frames: this.anims.generateFrameNumbers('wizard', {frames: [1,2]}),
             frameRate: 4,
             repeat: -1
         });
@@ -103,7 +103,7 @@ class Play extends Phaser.Scene {
             } else if(cursors.down.isDown){
                 guy.anims.play('down', true);
             } else {
-                guy.anims.play('idle', true);
+                guy.anims.stop();
             }
 
             //guy movements
@@ -131,6 +131,7 @@ class Play extends Phaser.Scene {
 
     playerDies () {
         this.sound.stopAll();
+        this.wizard.setActive(false);
 
         this.guy.body.setVelocity(0);
         this.guy.anims.play("idle", true);
