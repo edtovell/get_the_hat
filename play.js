@@ -6,15 +6,22 @@ class Play extends Phaser.Scene {
     }
 
     preload () {
-        this.load.spritesheet('guy', './assets/images/guy_spritesheet.png', {frameWidth: 32, frameHeight: 32});
+        this.load.spritesheet('guy', './assets/images/guy/guy_spritesheet.png', {frameWidth: 32, frameHeight: 32});
         this.load.tilemapTiledJSON('map', './assets/images/maps/map1.json');
         this.load.image('tiles', './assets/images/tiles/tile_spritesheet.png');
         this.load.image('red_dot', './assets/particles/red_dot.png');
+        this.load.spritesheet('wizard', './assets/images/npcs/wizard_spritesheet.png', {frameWidth: 32, frameHeight: 32})
         this.cursors = this.input.keyboard.createCursorKeys();
-        // for future reference: https://www.toptal.com/developers/css/sprite-generator/
+        this.load.audio('music', './assets/sounds/dumb_song.wav');
+        this.load.audio('die', './assets/sounds/die.wav');
+        // for future reference: 
+        //    spritesheets: https://www.toptal.com/developers/css/sprite-generator/
+        //    music: https://beepbox.co/#8n31s1k0l00e0ft38m1a7g0fj07i0r1o3210T1v1L4u01q1d2f7y3z1C0c0A0F0B9V9Q0000Pe850E0141T1v1L4u01q1d1f7y4z1C1c0A1F9B4V1Q1003Pdb95E019bT0v0L3u00q1d3f8y1z1C2w2c3h0T4v1L4uf0q1z6666ji8k8k3jSBKSJJAArriiiiii07JCABrzrrrrrrr00YrkqHrsrrrrjr005zrAqzrjzrrqr1jRjrqGGrrzsrsA099ijrABJJJIAzrrtirqrqjqixzsrAjrqjiqaqqysttAJqjikikrizrHtBJJAzArzrIsRCITKSS099ijrAJS____Qg99habbCAYrDzh00b8i4i4x4y8y80000N8Och000x8i4x8g004h4h4h4h000p23ELpuFhJCn866joE7XrsOZTmpIzZr1vZSVOnpX12cOpuu4Lp1sDv_siouUj-Hv_pHh4JhSXXlC2CIB6WL-GhIHIDiraHMgROkzjjvtjjyfinO918AcAhOdOlO9d8AQAjNaji9d94Qyjihh8AYyjOlVkB8OczpKfO2OddN_Fu2IXnYuTuKU_SBWrQvLnG2FIn-k-tvtNfkt_YKIAk0kQpQ1rsPhCpw5R5lRRStCttg0
     }
 
     create () {
+
+        this.sound.play('music', {loop: true});
 
         //map & tiles    
         var map = this.make.tilemap({key: 'map'});
@@ -66,6 +73,17 @@ class Play extends Phaser.Scene {
             frameRate: 5,
             repeat: -1
         });
+
+        // there is a wizard
+        this.wizard = this.physics.add.sprite(200, 200, "wizard", 0);
+        this.wizard.body.static = true;
+        this.anims.create({
+            key: 'wizard',
+            frames: this.anims.generateFrameNumbers('wizard', {frames: [2,3]}),
+            frameRate: 4,
+            repeat: -1
+        });
+        this.physics.add.collider(guy, this.wizard);
     }
 
     update () {
@@ -105,10 +123,15 @@ class Play extends Phaser.Scene {
                 this.playerDies();
             }
         }
+
+        this.wizard.body.setVelocity(0);
+        this.wizard.anims.play('wizard', true);
         
     }
 
     playerDies () {
+        this.sound.stopAll();
+
         this.guy.body.setVelocity(0);
         this.guy.anims.play("idle", true);
         this.guy.setActive(false);
@@ -126,6 +149,7 @@ class Play extends Phaser.Scene {
                 });
                 this.guy.setVisible(false);
                 emitter.explode();
+                this.sound.play('die');
             },
             callbackScope: this,
         });
