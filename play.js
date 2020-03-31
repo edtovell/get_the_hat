@@ -10,8 +10,10 @@ class Play extends Phaser.Scene {
         this.load.tilemapTiledJSON('map', './assets/images/maps/map1.json');
         this.load.image('tiles', './assets/images/tiles/tile_spritesheet.png');
         this.load.image('red_dot', './assets/particles/red_dot.png');
+        this.load.image('text_box', './assets/images/misc/textbox.png');
         this.load.spritesheet('wizard', './assets/images/npcs/wizard_spritesheet.png', {frameWidth: 32, frameHeight: 32})
         this.cursors = this.input.keyboard.createCursorKeys();
+        this.cursors.x = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
         this.load.audio('music', './assets/sounds/dumb_song.wav');
         this.load.audio('die', './assets/sounds/die.wav');
         // for future reference: 
@@ -81,6 +83,7 @@ class Play extends Phaser.Scene {
         });
         
         guy.anims.play('idle');
+        guy.idle_counter = 0;
 
         // there is a wizard
         this.wizard = this.physics.add.sprite(coord(12), coord(36), "wizard", 0);
@@ -92,24 +95,36 @@ class Play extends Phaser.Scene {
             repeat: -1
         });
         this.physics.add.collider(guy, this.wizard);
+
+        // config for controling dialog
+        this.dialog = {components: Array(), active: false, canEnter: true, canExit: false};
+
     }
 
     update () {
         var cursors = this.cursors;
         var guy = this.guy;
         
+        guy.idle_counter++;
+
         if(guy.active){
             //guy animations
             if(cursors.left.isDown){
                 guy.anims.play('l/r', true);
                 guy.flipX = false;
+                guy.idle_counter = 0;
             } else if(cursors.right.isDown){
                 guy.anims.play('l/r', true);
                 guy.flipX = true;
+                guy.idle_counter = 0;
             } else if(cursors.up.isDown){
                 guy.anims.play('up', true);
+                guy.idle_counter = 0;
             } else if(cursors.down.isDown){
                 guy.anims.play('down', true);
+                guy.idle_counter = 0;
+            } else if(guy.idle_counter>100) { 
+                guy.anims.play("idle", true);
             } else {
                 guy.anims.stop();
             }
@@ -127,14 +142,100 @@ class Play extends Phaser.Scene {
                 guy.body.setVelocityY(this.guyMoveSpeed);
             }
 
-            if(cursors.space.isDown){
+            if(cursors.x.isDown){
                 this.playerDies();
+            }
+
+        }
+
+        // dialog controls
+        if(this.dialog.active) {
+            if(this.dialog.canExit) {
+                if(cursors.space.isDown){
+                    console.log('pressed space');
+                    this.exitDialog();
+                    }
+                }
+            }
+        else {
+            if(this.dialog.canEnter) {
+                if(cursors.space.isDown){
+                    console.log('pressed space');
+                    this.enterDialog();
+                }
             }
         }
 
         this.wizard.body.setVelocity(0);
         this.wizard.anims.play('wizard', true);
         
+    }
+
+    enterDialog () {
+        console.log('entered dialog');
+
+        var box = this.add.image(0, 0, "text_box");
+        
+        console.log('drew box');
+        // set the textbox to occupy the bottom quarter of the camera
+        var cam = this.cameras.main;
+        box.setPosition(cam.midPoint.x, cam.midPoint.y + (cam.displayHeight * 2/6) );
+        box.setDisplaySize(cam.displayWidth-20, (cam.displayHeight/3)-20);
+
+        console.log('repositioned box');
+
+        // freeze the scene
+        this.guy.setVelocity(0);
+        this.guy.setActive(false);
+        this.wizard.setActive(false);
+
+        console.log('froze characters');
+
+        // set dialog controls
+        this.dialog.active = true;
+        this.dialog.components = this.dialog.components.concat([box]);
+        this.dialog.canEnter = false;
+        this.dialog.canExit = false;
+
+        console.log('set dialog components');
+        console.log(this.dialog);
+
+        // enable controls to close dialog after 1.5 seconds
+        this.time.addEvent({
+            delay: 1500,
+            callback: function() {
+                this.dialog.canExit = true;
+                console.log("dialog.canExit = true");
+            },
+            callbackScope: this,
+        })
+    }
+
+    exitDialog () {
+        console.log('exited dialog');
+
+        // unfreeze the scene
+        this.guy.setActive(true);
+        this.wizard.setActive(true);
+        console.log('reactivated characters');
+
+        // unset dialog options
+        this.dialog.components.forEach( (obj) => obj.destroy() );
+        console.log('destroyed components');
+        this.dialog.components = Array();
+        this.dialog.active = false;
+        console.log('set dialog components');
+        console.log(this.dialog);
+
+        // enable controls to close dialog after 1 second
+        this.time.addEvent({
+            delay: 1000,
+            callback: function() {
+                this.dialog.canEnter = true;
+                console.log("dialog.canEnter = true");
+            },
+            callbackScope: this,
+        })
     }
 
     playerDies () {

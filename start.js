@@ -11,7 +11,7 @@ class Start extends Phaser.Scene {
             'get the hat',
             {
                 fontSize: "30px",
-                fontFamily: "Arial",
+                fontFamily: "Courier",
             }
         );
         this.time.addEvent({

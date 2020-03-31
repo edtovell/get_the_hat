@@ -11,7 +11,7 @@ class UDed extends Phaser.Scene {
             'u ded',
             {
                 fontSize: "20px",
-                fontFamily: "Arial",
+                fontFamily: "Courier",
                 color: "#f00",
             }
         );
