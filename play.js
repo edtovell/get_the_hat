@@ -189,16 +189,16 @@ class Play extends Phaser.Scene {
             } else {
                 // enable movement controls
                 if (cursors.left.isDown) {
-                    guy.moveTarget.x -= T;
+                    guy.moveTarget.x = guy.x - T;
                     guy.body.setVelocityX(-this.guyMoveSpeed);
                 } else if (cursors.right.isDown) {
-                    guy.moveTarget.x += T;
+                    guy.moveTarget.x = guy.x + T;
                     guy.setVelocityX(+this.guyMoveSpeed);
                 } else if (cursors.up.isDown) {
-                    guy.moveTarget.y -= T;
+                    guy.moveTarget.y = guy.y - T;
                     guy.body.setVelocityY(-this.guyMoveSpeed);
                 } else if (cursors.down.isDown) {
-                    guy.moveTarget.y += T;
+                    guy.moveTarget.y = guy.y + T;
                     guy.body.setVelocityY(+this.guyMoveSpeed);
                 } else {
                     guy.body.setVelocity(0);
