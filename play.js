@@ -3,6 +3,7 @@ class Play extends Phaser.Scene {
     constructor() {
         super({ key: "play" });
         this.guyMoveSpeed = 150;
+        this.T =32; // size of one tile
     }
 
     preload() {
@@ -26,7 +27,7 @@ class Play extends Phaser.Scene {
         this.sound.play('music', { loop: true });
 
         //map & tiles    
-        const T = 32; //size of one tile
+        const T = this.T;
         var map = this.make.tilemap({ key: 'map' });
         var tiles = map.addTilesetImage('tile_spritesheet', 'tiles', T, T, 1, 2);
         var grass = map.createStaticLayer('grass', tiles);
@@ -39,8 +40,7 @@ class Play extends Phaser.Scene {
         }
 
         //guy goes in middle, camera follows guy,
-        this.guy = this.physics.add.sprite(coord(15), coord(38), 'guy', 0);
-        var guy = this.guy;
+        var guy =  this.physics.add.sprite(coord(15), coord(38), 'guy', 0);
         this.cameras.main.startFollow(guy);
         this.cameras.main.setZoom(2);
         this.cameras.main.roundPixels = true;
@@ -84,17 +84,20 @@ class Play extends Phaser.Scene {
 
         guy.anims.play('idle');
         guy.idle_counter = 0;
+        guy.moveTarget = new Phaser.Math.Vector2(guy.x, guy.y);
+        guy.isMoving = function() {return Boolean(guy.body.velocity.x || guy.body.velocity.y)}
 
         // there is a wizard
-        this.wizard = this.physics.add.sprite(coord(12), coord(36), "wizard", 0);
-        this.wizard.body.immovable = true;
+        var wizard = this.physics.add.sprite(coord(12), coord(36), "wizard", 0);
+        wizard.body.immovable = true;
         this.anims.create({
             key: 'wizard',
             frames: this.anims.generateFrameNumbers('wizard', { frames: [1, 2] }),
             frameRate: 4,
             repeat: -1
         });
-        this.physics.add.collider(guy, this.wizard);
+        this.physics.add.collider(guy, wizard);
+        this.wizard = wizard;
 
         // config for controling dialog
         this.dialog = {
@@ -107,49 +110,102 @@ class Play extends Phaser.Scene {
             canExit: false
         };
 
+        this.guy = guy;
     }
 
     update() {
+        const T = this.T;
         var cursors = this.cursors;
         var guy = this.guy;
 
-        guy.idle_counter++;
+        // console.log("Velocity  x:" + guy.body.velocity.x + " y:" + guy.body.velocity.y);
+        // console.log("Pos       x:" + guy.x + " y:" + guy.y);
+        // console.log("Target    x:" + guy.moveTarget.x + " y:" + guy.moveTarget.y);
+        // console.log("isMoving: " + guy.body.isMoving);
 
         if (guy.active) {
-            //guy animations
-            if (cursors.left.isDown) {
-                guy.anims.play('l/r', true);
-                guy.flipX = false;
-                guy.idle_counter = 0;
-            } else if (cursors.right.isDown) {
-                guy.anims.play('l/r', true);
-                guy.flipX = true;
-                guy.idle_counter = 0;
-            } else if (cursors.up.isDown) {
-                guy.anims.play('up', true);
-                guy.idle_counter = 0;
-            } else if (cursors.down.isDown) {
-                guy.anims.play('down', true);
-                guy.idle_counter = 0;
-            } else if (guy.idle_counter > 100) {
-                guy.anims.play("idle", true);
-            } else {
-                guy.anims.stop();
+            guy.idle_counter++;
+
+            if (!guy.isMoving()){
+                //guy animations
+                if (cursors.left.isDown) {
+                    guy.anims.play('l/r', true);
+                    guy.setFlipX(false);
+                    guy.idle_counter = 0;
+                } else if (cursors.right.isDown) {
+                    guy.anims.play('l/r', true);
+                    guy.setFlipX(true);
+                    guy.idle_counter = 0;
+                } else if (cursors.up.isDown) {
+                    guy.anims.play('up', true);
+                    guy.idle_counter = 0;
+                } else if (cursors.down.isDown) {
+                    guy.anims.play('down', true);
+                    guy.idle_counter = 0;
+                } else if (guy.idle_counter > 100) {
+                    guy.anims.play("idle", true);
+                } else {
+                    guy.anims.stop();
+                }
             }
 
             //guy movements
-            guy.body.setVelocity(0);
-            if (cursors.left.isDown) {
-                guy.body.setVelocityX(-this.guyMoveSpeed);
-            } else if (cursors.right.isDown) {
-                guy.setVelocityX(this.guyMoveSpeed);
-            }
-            if (cursors.up.isDown) {
-                guy.body.setVelocityY(-this.guyMoveSpeed);
-            } else if (cursors.down.isDown) {
-                guy.body.setVelocityY(this.guyMoveSpeed);
+            if (guy.isMoving()) {
+                // are we there yet?
+                var v = guy.body.velocity;
+                if (v.x < 0) {
+                    // moving left
+                    if (guy.x < guy.moveTarget.x){
+                        // stop moving left
+                        guy.setX(guy.moveTarget.x);
+                        guy.body.setVelocity(0);
+                    }
+                }
+                else if (v.x > 0) {
+                    // moving right
+                    if (guy.x > guy.moveTarget.x){
+                        // stop moving right
+                        guy.setX(guy.moveTarget.x);
+                        guy.body.setVelocity(0);
+                    }
+                }
+                else if (v.y < 0) {
+                    // moving up
+                    if (guy.y < guy.moveTarget.y){
+                        // stop moving up
+                        guy.setY(guy.moveTarget.y);
+                        guy.body.setVelocity(0);
+                    }
+                }
+                else if (v.y > 0) {
+                    // moving down
+                    if (guy.y > guy.moveTarget.y){
+                        // stop moving down
+                        guy.setY(guy.moveTarget.y);
+                        guy.body.setVelocity(0);
+                    }
+
+                }
+            } else {
+                // enable movement controls
+                if (cursors.left.isDown) {
+                    guy.moveTarget.x -= T;
+                    guy.body.setVelocityX(-this.guyMoveSpeed);
+                } else if (cursors.right.isDown) {
+                    guy.moveTarget.x += T;
+                    guy.setVelocityX(+this.guyMoveSpeed);
+                } else if (cursors.up.isDown) {
+                    guy.moveTarget.y -= T;
+                    guy.body.setVelocityY(-this.guyMoveSpeed);
+                } else if (cursors.down.isDown) {
+                    guy.moveTarget.y += T;
+                    guy.body.setVelocityY(+this.guyMoveSpeed);
+                } else {
+                    guy.body.setVelocity(0);
+                }
             }
 
+            // press x to die
             if (cursors.x.isDown) {
                 this.playerDies();
             }
@@ -179,9 +235,9 @@ class Play extends Phaser.Scene {
                 }
             }
         }
-
-        this.wizard.body.setVelocity(0);
-        this.wizard.anims.play('wizard', true);
+        var wizard = this.wizard;
+        wizard.body.setVelocity(0);
+        wizard.anims.play('wizard', true);
 
     }
 
