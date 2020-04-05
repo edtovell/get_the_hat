@@ -8,8 +8,7 @@ var config = {
             // debug: true
         }
     },
-    scene: [Start, Play, UDed]
-    // scene: [Play]
+    scene: [Start, Play, HUD, UDed]
 };
 
 var game = new Phaser.Game(config);

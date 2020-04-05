@@ -22,6 +22,9 @@ class Start extends Phaser.Scene {
     }
 
     start_game () {
+        if(this.scene.isActive('play')){
+            this.scene.stop('play');
+        }
         this.scene.start("play");
     }
 }
