@@ -18,11 +18,13 @@ class Play extends Phaser.Scene {
         this.load.image('tiles', './assets/images/tiles/tile_spritesheet.png');
         this.load.image('red_dot', './assets/particles/red_dot.png');
         this.load.image('text_box', './assets/images/misc/textbox.png');
-        this.load.spritesheet('wizard', './assets/images/npcs/wizard_spritesheet.png', { frameWidth: 32, frameHeight: 32 })
+        this.load.spritesheet('wizard', './assets/images/npcs/wizard_spritesheet.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.image('sign', './assets/images/misc/sign.png');
         this.cursors = this.input.keyboard.createCursorKeys();
         this.cursors.x = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
         this.load.audio('music', './assets/sounds/dumb_song.wav');
         this.load.audio('die', './assets/sounds/die.wav');
+        this.load.json('dialog', './assets/dialog.json');
         // for future reference: 
         //    spritesheets: https://www.toptal.com/developers/css/sprite-generator/
         //    music: https://beepbox.co/#8n31s1k0l00e0ft38m1a7g0fj07i0r1o3210T1v1L4u01q1d2f7y3z1C0c0A0F0B9V9Q0000Pe850E0141T1v1L4u01q1d1f7y4z1C1c0A1F9B4V1Q1003Pdb95E019bT0v0L3u00q1d3f8y1z1C2w2c3h0T4v1L4uf0q1z6666ji8k8k3jSBKSJJAArriiiiii07JCABrzrrrrrrr00YrkqHrsrrrrjr005zrAqzrjzrrqr1jRjrqGGrrzsrsA099ijrABJJJIAzrrtirqrqjqixzsrAjrqjiqaqqysttAJqjikikrizrHtBJJAzArzrIsRCITKSS099ijrAJS____Qg99habbCAYrDzh00b8i4i4x4y8y80000N8Och000x8i4x8g004h4h4h4h000p23ELpuFhJCn866joE7XrsOZTmpIzZr1vZSVOnpX12cOpuu4Lp1sDv_siouUj-Hv_pHh4JhSXXlC2CIB6WL-GhIHIDiraHMgROkzjjvtjjyfinO918AcAhOdOlO9d8AQAjNaji9d94Qyjihh8AYyjOlVkB8OczpKfO2OddN_Fu2IXnYuTuKU_SBWrQvLnG2FIn-k-tvtNfkt_YKIAk0kQpQ1rsPhCpw5R5lRRStCttg0
@@ -46,8 +48,8 @@ class Play extends Phaser.Scene {
         }
 
         //guy goes in middle, camera follows guy,
-        // var guy = this.physics.add.sprite(coord(15), coord(38), 'guy', 0);
-        var guy = this.physics.add.sprite(coord(11), coord(32), 'guy', 0); // debug start coords
+        var guy = this.physics.add.sprite(coord(15), coord(38), 'guy', 0);
+        // var guy = this.physics.add.sprite(coord(11), coord(32), 'guy', 0); // debug start coords
         this.cameras.main.startFollow(guy);
         this.cameras.main.setZoom(2);
         this.cameras.main.roundPixels = true;
@@ -99,9 +101,12 @@ class Play extends Phaser.Scene {
         guy.isMoving = function() { return Boolean(guy.body.velocity.x || guy.body.velocity.y) }
 
         //sensor block so guy can interact with whatever is in the next space
-        var sensorBlock = this.physics.add.sprite(guy.x, guy.y + 5, "guy", 0);
+        var sensorBlock = this.physics.add.sprite(guy.x, guy.y + 5, null, 0);
         sensorBlock.setVisible(false);
         this.sensorBlock = sensorBlock;
+
+        //load the dialog json
+        var dialogJSON = this.cache.json.get("dialog");
 
         // there is a wizard
         var wizard = this.physics.add.sprite(coord(12), coord(36), "wizard", 0);
@@ -112,37 +117,70 @@ class Play extends Phaser.Scene {
             frameRate: 4,
             repeat: -1
         });
-        this.physics.add.collider(guy, wizard);
-        wizard.interact = function(){
-            if(this.scene.guy.body.facing === LEFT){
-                console.log("look right");
+        wizard.dialog = dialogJSON["wizard"];
+        wizard.dialog.counter = 0;
+        wizard.interact = function() {
+            if (this.scene.guy.body.facing === LEFT) {
+                // console.log("look right");
                 this.setFlipX(true);
                 this.setFrame(3);
-            } else if(this.scene.guy.body.facing === RIGHT){
-                console.log("look left");
+            } else if (this.scene.guy.body.facing === RIGHT) {
+                // console.log("look left");
                 this.setFrame(3);
-            } else if(this.scene.guy.body.facing === DOWN){
-                console.log("look up");
+            } else if (this.scene.guy.body.facing === DOWN) {
+                // console.log("look up");
                 this.setFrame(0);
             } else {
-                console.log("look down");
+                // console.log("look down");
                 this.setFrame(2);
             }
+            let targetDialog = this.dialog[this.dialog.counter];
             this.scene.enterDialog();
-            this.scene.printDialog("Hello.");
+            this.scene.printDialog(targetDialog.text);
+            if (targetDialog.then == "next") {
+                this.dialog.counter++;
+            } else if (targetDialog.then == "win") {
+                return "win"
+            }
         }
         this.wizard = wizard;
 
         this.guy = guy;
 
-        // list all the interactable objects
-        this.interactables = [wizard];
+        // there are some signposts
+        var signA = this.physics.add.image(coord(54), coord(28), "sign");
+        signA.body.immovable = true;
+        signA.interact = function() {
+            this.scene.enterDialog();
+            this.scene.printDialog(dialogJSON["signA"]);
+        }
+        this.signA = signA;
+
+        var signB = this.physics.add.image(coord(26), coord(40), "sign");
+        signB.body.immovable = true;
+        signB.interact = function() {
+            this.scene.enterDialog();
+            this.scene.printDialog(dialogJSON["signB"]);
+        }
+        this.signB = signB;
+
+        // list all the interactable objects - you can't go through them
+        this.interactables = [wizard, signA, signB];
+        this.interactables.forEach((obj) => this.physics.add.collider(guy, obj));
 
         // call the HUD
         if (this.scene.isActive("HUD")) {
             this.scene.stop("HUD");
         }
         this.scene.launch("HUD");
+        // save it for later
+        this.HUD = this.scene.get("HUD");
+
+        // tooltip-help-button-hint-text-thing
+        this.tooltip = this.add.text(
+
+        )
+
 
         // config for controling dialog
         this.dialog = {
@@ -154,6 +192,9 @@ class Play extends Phaser.Scene {
             canEnter: true,
             canExit: false
         };
+
+        // you haven't won yet
+        this.won = false;
     }
 
     update() {
@@ -274,6 +315,7 @@ class Play extends Phaser.Scene {
 
         // dialog controls
         if (this.dialog.active) {
+            this.HUD.tooltip.setVisible(false);
             if (this.dialog.textCounter >= this.dialog.text.length) {
                 this.dialog.canEnter = false;
                 this.dialog.canSkip = false;
@@ -288,6 +330,7 @@ class Play extends Phaser.Scene {
             }
 
             if (this.dialog.canExit) {
+                this.HUD.tooltip.setVisible(true);
                 if (cursors.space.isDown) {
                     // console.log('pressed space');
                     this.exitDialog();
@@ -304,6 +347,7 @@ class Play extends Phaser.Scene {
                         delay: 1000,
                         callback: function() {
                             this.dialog.canExit = true;
+                            this.HUD.tooltip.setVisible(true);
                             // console.log("dialog.canExit = true");
                         },
                         callbackScope: this,
@@ -311,12 +355,15 @@ class Play extends Phaser.Scene {
                 }
             }
         } else if (this.dialog.canEnter) {
+            this.HUD.tooltip.setVisible(false);
             var obj;
             for (obj of this.interactables) {
                 if (this.physics.overlap(this.sensorBlock, obj)) {
+                    this.HUD.tooltip.setVisible(true);
                     if (cursors.space.isDown) {
                         // console.log('pressed space');
-                        obj.interact();
+                        var result = obj.interact();
+                        this.won = Boolean(result=="win");
                     }
                 }
             }
@@ -433,6 +480,12 @@ class Play extends Phaser.Scene {
             },
             callbackScope: this,
         })
+
+        if(this.won) {
+            this.scene.stop("HUD");
+            this.scene.start("win");
+        }
+
     }
 
     playerDies() {

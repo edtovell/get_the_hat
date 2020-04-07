@@ -1,0 +1,29 @@
+{
+    "wizard": [
+    {
+        "text": "Hello.",
+        "then": "next"
+    },
+    {
+        "text": "... yes? Can I help you?\nA HAT you say?\nNo, I haven't seen anything like that, sorry, can't help you.",
+        "then": "next"
+    },
+    {
+        "text": "You again? Piss off.",
+        "then": "next"
+    },
+    {
+        "text": "Look I already told you ... what's that?\nMY hat, you say?\nAbsolutely not. Now piss off.",
+        "then": "next"
+    },
+    {
+        "text": "Leave me alone.",
+        "then": "next"
+    },
+    {
+        "text": "Oh my actual god.\nSod it. If I give you my hat will you leave me alone?",
+        "then": "win"
+    }],
+    "signA": "                      CAUTION\n\n                       sign",
+    "signB": "                  Control Scheme:\nup to up, down to down, left to left, right to right\nspace to do thing\nx to die"
+}

@@ -8,6 +8,7 @@ class HUD extends Phaser.Scene {
     }
 
     create() {
+    	var cam = this.cameras.main;
     	this.anxietyText = this.add.text(
     		10,
     		10,
@@ -16,11 +17,21 @@ class HUD extends Phaser.Scene {
                 fontSize: "28px",
                 fontFamily: "Courier",
             }
-    	) 
+    	)
+    	this.tooltip = this.add.text(
+    		cam.midPoint.x,
+    		cam.displayHeight*0.9,
+    		"[space] to do stuff",
+    		{
+    			fontSize: "26px",
+    			fontFamily: "Courier"
+    		}
+    	)
+    	this.tooltip.setVisible(false);
     }
 
     update() {
     	this.anxietyVal+=Phaser.Math.Between(1,3);
-    	this.anxietyText.setText("anxiety: " + this.anxietyVal/10 + "%")
+    	this.anxietyText.setText("anxiety: " + this.anxietyVal/10 + "%");
     }
 }
